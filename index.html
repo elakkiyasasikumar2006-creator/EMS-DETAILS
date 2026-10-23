@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employee Management System</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+header {
+    background: linear-gradient(120deg, #123c91, #3285e8);
+    color: white;
+    padding: 25px 30px;
+}
+
+header h1 {
+    margin-bottom: 8px;
+}
+
+header p {
+    color: #dbeafe;
+}
+
+.container {
+    padding: 25px;
+    max-width: 1400px;
+    margin: auto;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.card, .panel {
+    background: white;
+    padding: 22px;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px #0f172a0b;
+}
+
+.card p {
+    color: #64748b;
+    margin-bottom: 12px;
+}
+
+.card h2 {
+    color: #1d4ed8;
+    font-size: 28px;
+}
+
+.charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.chart-box {
+    height: 260px;
+    margin-top: 20px;
+}
+
+.panel h2 {
+    margin-bottom: 18px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    margin-top: 7px;
+    outline-color: #2563eb;
+    background: white;
+}
+
+label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #475569;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    color: white;
+    background: #2563eb;
+    margin: 5px 3px 0 0;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+.secondary { background: #64748b; }
+.edit { background: #0891b2; }
+.delete { background: #dc2626; }
+.success { background: #059669; }
+
+.toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.toolbar input, .toolbar select {
+    max-width: 260px;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px;
+}
+
+th, td {
+    padding: 13px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+}
+
+th {
+    background: #eff6ff;
+    color: #1e40af;
+}
+
+tr:hover {
+    background: #f8fafc;
+}
+
+.status {
+    background: #dcfce7;
+    color: #166534;
+    padding: 5px 9px;
+    border-radius: 20px;
+}
+
+#details {
+    line-height: 2;
+}
+
+.hidden {
+    display: none;
+}
+
+footer {
+    text-align: center;
+    color: #64748b;
+    padding: 25px;
+}
+
+@media(max-width:600px) {
+    .container { padding: 12px; }
+    header { padding: 22px 15px; }
+    .toolbar input, .toolbar select { max-width: 100%; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Employee Management System</h1>
+    <p>Manage employees, departments and company records in one place.</p>
+</header>
+
+<main class="container">
+
+<section class="cards">
+    <div class="card">
+        <p>Total Employees</p>
+        <h2 id="total">0</h2>
+    </div>
+    <div class="card">
+        <p>Departments</p>
+        <h2 id="departments">0</h2>
+    </div>
+    <div class="card">
+        <p>Monthly Payroll</p>
+        <h2 id="payroll">₹0</h2>
+    </div>
+    <div class="card">
+        <p>New Hires This Month</p>
+        <h2 id="newHires">0</h2>
+    </div>
+</section>
+
+<section class="charts">
+    <div class="panel">
+        <h2>Employees by Department</h2>
+        <div class="chart-box"><canvas id="departmentChart"></canvas></div>
+    </div>
+    <div class="panel">
+        <h2>Team Distribution</h2>
+        <div class="chart-box"><canvas id="teamChart"></canvas></div>
+    </div>
+    <div class="panel">
+        <h2>Hiring Trend</h2>
+        <div class="chart-box"><canvas id="hiringChart"></canvas></div>
+    </div>
+</section>
+
+<section class="panel" id="formPanel">
+    <h2 id="formTitle">Add New Employee</h2>
+
+    <form id="employeeForm">
+        <div class="form-grid">
+            <div>
+                <label>Employee ID</label>
+                <input id="empId" required placeholder="EMP001">
+            </div>
+            <div>
+                <label>Full Name</label>
+                <input id="name" required placeholder="Employee name">
+            </div>
+            <div>
+                <label>Email</label>
+                <input id="email" type="email" required>
+            </div>
+            <div>
+                <label>Phone</label>
+                <input id="phone" type="tel">
+            </div>
+            <div>
+                <label>Date of Birth</label>
+                <input id="dob" type="date">
+            </div>
+            <div>
+                <label>Gender</label>
+                <select id="gender">
+                    <option value="">Select gender</option>
+                    <option>Female</option>
+                    <option>Male</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div>
+                <label>Department</label>
+                <select id="department" required>
+                    <option value="">Select department</option>
+                    <option>IT</option>
+                    <option>HR</option>
+                    <option>Finance</option>
+                    <option>Marketing</option>
+                    <option>Sales</option>
+                    <option>Operations</option>
+                </select>
+            </div>
+            <div>
+                <label>Designation</label>
+                <input id="designation" placeholder="Software Developer">
+            </div>
+            <div>
+                <label>Joining Date</label>
+                <input id="joiningDate" type="date" required>
+            </div>
+            <div>
+                <label>Employment Type</label>
+                <select id="employmentType">
+                    <option>Full-time</option>
+                    <option>Part-time</option>
+                    <option>Contract</option>
+                    <option>Intern</option>
+                </select>
+            </div>
+            <div>
+                <label>Reporting Manager</label>
+                <input id="manager">
+            </div>
+            <div>
+                <label>Status</label>
+                <select id="status">
+                    <option>Active</option>
+                    <option>On Leave</option>
+                    <option>Inactive</option>
+                </select>
+            </div>
+            <div>
+                <label>Monthly Salary (₹)</label>
+                <input id="salary" type="number" min="0" required>
+            </div>
+            <div>
+                <label>Address</label>
+                <input id="address">
+            </div>
+        </div>
+
+        <button type="submit" id="saveButton">Add Employee</button>
+        <button type="button" class="secondary" onclick="resetForm()">Clear</button>
+    </form>
+</section>
+
+<br>
+
+<section class="panel">
+    <h2>Employee Records</h2>
+
+    <div class="toolbar">
+        <input id="search" placeholder="Search name, ID or email...">
+        <select id="filterDepartment">
+            <option value="">All Departments</option>
+            <option>IT</option>
+            <option>HR</option>
+            <option>Finance</option>
+            <option>Marketing</option>
+            <option>Sales</option>
+            <option>Operations</option>
+        </select>
+        <button class="success" onclick="exportCSV()">Export CSV</button>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="employeeTable"></tbody>
+        </table>
+    </div>
+</section>
+
+<br>
+
+<section class="panel hidden" id="detailsPanel">
+    <h2>Employee Details</h2>
+    <div id="details"></div>
+    <button class="secondary" onclick="closeDetails()">Close Details</button>
+</section>
+
+</main>
+
+<footer>Employee Management System | Dashboard</footer>
+
+<script type="module">
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+    getDatabase, ref, onValue, push, set, update, remove
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* Paste your existing Firebase configuration here */
+const firebaseConfig = {
+    apiKey: "AIzaSyAmgw4-kTumzqz9mQQxehDGJnstUxrVDAc",
+    authDomain: "ems123-6335f.firebaseapp.com",
+    databaseURL:"https://ems123-6335f-default-rtdb.firebaseio.com",
+    projectId: "ems123-6335f",
+    storageBucket:  "ems123-6335f.firebasestorage.app",
+    messagingSenderId: "207294182765",
+    appId: "1:207294182765:web:3701e7b705887a13f51664",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const employeeRef = ref(db, "employees");
+
+let employees = [];
+let editingKey = null;
+
+const fields = [
+    "empId", "name", "email", "phone", "dob", "gender",
+    "department", "designation", "joiningDate", "employmentType",
+    "manager", "status", "salary", "address"
+];
+
+const $ = id => document.getElementById(id);
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+}
+
+onValue(employeeRef, snapshot => {
+    const data = snapshot.val() || {};
+    employees = Object.entries(data).map(([key, value]) => ({
+        ...value, key
+    }));
+    render();
+}, error => {
+    alert("Firebase read failed: " + error.message +
+          ". Check your API key and database rules.");
+});
+
+function render() {
+    $("total").textContent = employees.length;
+
+    $("departments").textContent =
+        new Set(employees.map(e => e.department).filter(Boolean)).size;
+
+    const payroll = employees.reduce((sum, e) =>
+        sum + (Number(e.salary) || 0), 0);
+
+    $("payroll").textContent = payroll.toLocaleString("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0
+    });
+
+    const now = new Date();
+    $("newHires").textContent = employees.filter(e => {
+        if (!e.joiningDate) return false;
+        const d = new Date(e.joiningDate + "T00:00:00");
+        return d.getMonth() === now.getMonth() &&
+               d.getFullYear() === now.getFullYear();
+    }).length;
+
+    renderTable();
+    renderCharts();
+}
+
+function renderTable() {
+    const search = $("search").value.toLowerCase();
+    const department = $("filterDepartment").value;
+
+    const filtered = employees.filter(e => {
+        const matchesSearch = [
+            e.name, e.empId, e.email, e.department
+        ].some(v => String(v || "").toLowerCase().includes(search));
+
+        return matchesSearch &&
+            (!department || e.department === department);
+    });
+
+    $("employeeTable").innerHTML = filtered.map(e => `
+        <tr>
+            <td>${escapeHTML(e.empId)}</td>
+            <td>${escapeHTML(e.name)}</td>
+            <td>${escapeHTML(e.department)}</td>
+            <td>${escapeHTML(e.designation)}</td>
+            <td>${escapeHTML(e.email)}</td>
+            <td><span class="status">${escapeHTML(e.status)}</span></td>
+            <td>
+                <button onclick="viewEmployee('${e.key}')">View</button>
+                <button class="edit" onclick="editEmployee('${e.key}')">Edit</button>
+                <button class="delete" onclick="deleteEmployee('${e.key}')">Delete</button>
+            </td>
+        </tr>
+    `).join("");
+
+    if (!filtered.length) {
+        $("employeeTable").innerHTML =
+            '<tr><td colspan="7">No employees found.</td></tr>';
+    }
+}
+
+let departmentChart, teamChart, hiringChart;
+
+function renderCharts() {
+    const departmentCounts = {};
+    const hiringCounts = {};
+
+    employees.forEach(e => {
+        const dept = e.department || "Other";
+        departmentCounts[dept] = (departmentCounts[dept] || 0) + 1;
+
+        if (e.joiningDate) {
+            const month = e.joiningDate.slice(0, 7);
+            hiringCounts[month] = (hiringCounts[month] || 0) + 1;
+        }
+    });
+
+    const months = Object.keys(hiringCounts).sort().slice(-6);
+
+    if (departmentChart) departmentChart.destroy();
+    if (teamChart) teamChart.destroy();
+    if (hiringChart) hiringChart.destroy();
+
+    departmentChart = new Chart($("departmentChart"), {
+        type: "bar",
+        data: {
+            labels: Object.keys(departmentCounts),
+            datasets: [{
+                label: "Employees",
+                data: Object.values(departmentCounts),
+                backgroundColor: "#3b82f6",
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+    });
+
+    teamChart = new Chart($("teamChart"), {
+        type: "doughnut",
+        data: {
+            labels: Object.keys(departmentCounts),
+            datasets: [{
+                data: Object.values(departmentCounts),
+                backgroundColor: [
+                    "#2563eb", "#06b6d4", "#8b5cf6",
+                    "#10b981", "#f59e0b", "#f43f5e"
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    hiringChart = new Chart($("hiringChart"), {
+        type: "line",
+        data: {
+            labels: months,
+            datasets: [{
+                label: "New Hires",
+                data: months.map(m => hiringCounts[m]),
+                borderColor: "#2563eb",
+                backgroundColor: "#bfdbfe",
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+    });
+}
+
+$("employeeForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const employee = {};
+    fields.forEach(field => employee[field] = $(field).value.trim());
+
+    employee.salary = Number(employee.salary) || 0;
+
+    try {
+        if (editingKey) {
+            await update(ref(db, "employees/" + editingKey), employee);
+            alert("Employee updated successfully!");
+        } else {
+            const duplicate = employees.some(e =>
+                e.empId.toLowerCase() === employee.empId.toLowerCase()
+            );
+            if (duplicate) {
+                alert("Employee ID already exists. Please use a unique ID.");
+                return;
+            }
+
+            await set(push(employeeRef), employee);
+            alert("Employee added successfully!");
+        }
+
+        resetForm();
+    } catch (error) {
+        alert("Could not save employee: " + error.message);
+    }
+});
+
+window.viewEmployee = function(key) {
+    const e = employees.find(item => item.key === key);
+    if (!e) return;
+
+    $("details").innerHTML = fields.map(field => `
+        <p><strong>${escapeHTML(
+            field.replace(/([A-Z])/g, " $1")
+                 .replace(/^./, c => c.toUpperCase())
+        )}:</strong> ${escapeHTML(e[field])}</p>
+    `).join("");
+
+    $("detailsPanel").classList.remove("hidden");
+    $("detailsPanel").scrollIntoView({ behavior: "smooth" });
+};
+
+window.closeDetails = function() {
+    $("detailsPanel").classList.add("hidden");
+};
+
+window.editEmployee = function(key) {
+    const e = employees.find(item => item.key === key);
+    if (!e) return;
+
+    editingKey = key;
+    fields.forEach(field => $(field).value = e[field] ?? "");
+
+    $("formTitle").textContent = "Edit Employee";
+    $("saveButton").textContent = "Update Employee";
+    $("formPanel").scrollIntoView({ behavior: "smooth" });
+};
+
+window.deleteEmployee = async function(key) {
+    const e = employees.find(item => item.key === key);
+    if (!e) return;
+
+    if (!confirm("Delete employee " + e.name + "?")) return;
+
+    try {
+        await remove(ref(db, "employees/" + key));
+        if (editingKey === key) resetForm();
+        closeDetails();
+        alert("Employee deleted.");
+    } catch (error) {
+        alert("Delete failed: " + error.message);
+    }
+};
+
+window.resetForm = function() {
+    $("employeeForm").reset();
+    editingKey = null;
+    $("formTitle").textContent = "Add New Employee";
+    $("saveButton").textContent = "Add Employee";
+};
+
+window.exportCSV = function() {
+    const header = fields;
+    const rows = employees.map(e =>
+        fields.map(f => e[f] ?? "")
+    );
+
+    const csvCell = value =>
+        '"' + String(value).replace(/"/g, '""') + '"';
+
+    const csv = [header, ...rows]
+        .map(row => row.map(csvCell).join(","))
+        .join("\r\n");
+
+    const blob = new Blob(["\uFEFF" + csv], {
+        type: "text/csv;charset=utf-8;"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "employees.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+};
+
+$("search").addEventListener("input", renderTable);
+$("filterDepartment").addEventListener("change", renderTable);
+</script>
+
+</body>
+</html>
